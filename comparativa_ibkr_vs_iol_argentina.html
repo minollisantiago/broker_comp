@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interactive Brokers vs InvertirOnline — Argentina</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --fg:#09090b;
+    --muted:#71717a;
+    --muted-2:#52525b;
+    --border:#e4e4e7;
+    --soft:#fafafa;
+    --soft-2:#f4f4f5;
+    --ok:#18181b;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--fg);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:15px;
+    line-height:1.55;
+  }
+  a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+  .wrap{max-width:1180px;margin:0 auto;padding:56px 28px 90px}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:12px;font-weight:650;letter-spacing:.08em;text-transform:uppercase;
+    border:1px solid var(--border);border-radius:999px;padding:6px 10px;background:var(--soft);
+  }
+  h1{
+    font-size:clamp(36px,6vw,66px);
+    line-height:.98;letter-spacing:-.055em;
+    margin:22px 0 18px;max-width:950px;
+  }
+  .lead{font-size:19px;line-height:1.6;color:var(--muted-2);max-width:900px;margin:0 0 28px}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:46px}
+  .chip{border:1px solid var(--border);border-radius:999px;padding:7px 10px;font-size:12px;color:var(--muted-2)}
+  .grid{display:grid;gap:16px}
+  .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .card{
+    border:1px solid var(--border);border-radius:var(--radius);
+    padding:22px;background:#fff;
+  }
+  .card.dark{background:var(--fg);color:#fff;border-color:var(--fg)}
+  .card h3{margin:0 0 8px;font-size:16px;letter-spacing:-.02em}
+  .metric{font-size:32px;line-height:1.05;font-weight:720;letter-spacing:-.045em;margin:8px 0}
+  .sub{color:var(--muted);font-size:13px}
+  .dark .sub{color:#a1a1aa}
+  section{margin-top:62px;scroll-margin-top:20px}
+  h2{font-size:30px;letter-spacing:-.04em;margin:0 0 10px}
+  h3{letter-spacing:-.025em}
+  .section-lead{color:var(--muted-2);max-width:900px;margin:0 0 22px}
+  .toc{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}
+  .toc a{
+    text-decoration:none;border:1px solid var(--border);border-radius:8px;
+    padding:8px 10px;font-size:13px;background:#fff;
+  }
+  .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:var(--radius)}
+  table{border-collapse:collapse;width:100%;min-width:760px;background:#fff}
+  th,td{padding:14px 15px;border-bottom:1px solid var(--border);vertical-align:top;text-align:left}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;background:var(--soft);color:var(--muted-2)}
+  tr:last-child td{border-bottom:0}
+  td strong{font-weight:680}
+  .winner{
+    display:inline-block;background:var(--fg);color:white;border-radius:6px;
+    padding:2px 7px;font-size:11px;font-weight:650;letter-spacing:.02em
+  }
+  .neutral{
+    display:inline-block;background:var(--soft-2);border:1px solid var(--border);
+    border-radius:6px;padding:2px 7px;font-size:11px;font-weight:600
+  }
+  .callout{
+    border-left:3px solid var(--fg);padding:14px 16px;background:var(--soft);
+    border-radius:0 10px 10px 0;margin:20px 0;color:#27272a
+  }
+  .warning{border-left-style:dashed}
+  .route{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0
+  }
+  .node{border:1px solid var(--border);border-radius:9px;padding:10px 12px;background:#fff;font-weight:600}
+  .arrow{color:var(--muted);font-size:18px}
+  .formula{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    background:var(--soft);border:1px solid var(--border);border-radius:10px;padding:14px 16px;
+    overflow:auto;font-size:13px
+  }
+  .small{font-size:12px;color:var(--muted)}
+  ul{padding-left:20px}
+  li{margin:5px 0}
+  .score{
+    width:100%;height:7px;background:var(--soft-2);border-radius:999px;overflow:hidden;border:1px solid var(--border)
+  }
+  .score > span{display:block;height:100%;background:var(--fg)}
+  .decision{
+    display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px
+  }
+  .decision .card{padding:26px}
+  .bigline{font-size:22px;line-height:1.25;font-weight:700;letter-spacing:-.035em;margin:0 0 10px}
+  .footnotes{font-size:13px;color:var(--muted-2)}
+  .sources li{margin:8px 0}
+  .footer{margin-top:70px;border-top:1px solid var(--border);padding-top:22px;color:var(--muted);font-size:12px}
+  @media(max-width:800px){
+    .wrap{padding:34px 18px 70px}
+    .grid-3,.grid-2,.decision{grid-template-columns:1fr}
+    h1{font-size:42px}
+  }
+  @media print{
+    .wrap{max-width:none;padding:25px}
+    a{text-decoration:none}
+    .toc{display:none}
+    .card,.table-wrap{break-inside:avoid}
+    section{break-inside:auto}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Research · Argentina · 28 Sep 2026</div>
+    <h1>Interactive Brokers vs InvertirOnline</h1>
+    <p class="lead">
+      Comparativa para un residente fiscal argentino que quiere invertir aproximadamente <strong>USD 40.000</strong>
+      en acciones y ETFs internacionales, con interés en Estados Unidos, Europa, Japón y acceso mediante API propia.
+    </p>
+    <div class="meta">
+      <span class="chip">Cartera analizada: USD 40.000</span>
+      <span class="chip">Moneda inicial: USD en banco argentino</span>
+      <span class="chip">Mercados: USA · Europa · Japón</span>
+      <span class="chip">Incluye fondeo · impuestos · API · rescate</span>
+    </div>
+
+    <div class="grid grid-3">
+      <div class="card dark">
+        <h3>Mejor cobertura global</h3>
+        <div class="metric">IBKR</div>
+        <div class="sub">170+ mercados, 40 países y 29 monedas; mejor encaje para una cartera internacional directa.</div>
+      </div>
+      <div class="card">
+        <h3>Mayor simplicidad local</h3>
+        <div class="metric">IOL</div>
+        <div class="sub">Integra cuenta argentina, CCL Simple y Cuenta USA en una sola experiencia.</div>
+      </div>
+      <div class="card">
+        <h3>Punto crítico para USD locales</h3>
+        <div class="metric">≈ 4,5%</div>
+        <div class="sub">Brecha MEP/CCL observada al 25/09/2026 antes de comisiones: hoy es el costo dominante para fondear IOL USA desde USD locales.</div>
+      </div>
+    </div>
+
+    <nav class="toc">
+      <a href="#resumen">Resumen</a>
+      <a href="#activos">Activos</a>
+      <a href="#costos">Costos</a>
+      <a href="#fondeo">Fondeo</a>
+      <a href="#api">API</a>
+      <a href="#impuestos">Impuestos</a>
+      <a href="#retiros">Rescate</a>
+      <a href="#decision">Conclusión</a>
+      <a href="#fuentes">Fuentes</a>
+    </nav>
+  </header>
+
+  <section id="resumen">
+    <h2>Resumen ejecutivo</h2>
+    <p class="section-lead">
+      Para este caso de uso, la principal ventaja de IOL es operativa: mover dinero dentro del ecosistema argentino y acceder a USA sin abrir una cuenta bancaria exterior.
+      La principal ventaja de IBKR es estructural: costos de trading muy inferiores, acceso global real y una infraestructura API mucho más profunda.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Dimensión</th><th>Interactive Brokers</th><th>InvertirOnline</th></tr></thead>
+        <tbody>
+          <tr><td>Acciones/ETFs USA</td><td><span class="winner">Muy amplio</span></td><td><span class="winner">Amplio</span></td></tr>
+          <tr><td>Europa / Japón directos</td><td><strong>Sí</strong>, múltiples bolsas</td><td>Cuenta USA enfocada en mercados estadounidenses; no comparable con IBKR en acceso directo global</td></tr>
+          <tr><td>ETFs UCITS europeos</td><td><strong>Sí</strong>, sujeto a permisos y disponibilidad</td><td>No es el foco de la Cuenta USA</td></tr>
+          <tr><td>Mercado argentino / CEDEARs</td><td>No directamente</td><td><strong>Sí</strong></td></tr>
+          <tr><td>Mantenimiento</td><td>USD 0 en cuenta individual estándar</td><td>USD 0</td></tr>
+          <tr><td>Trading USA</td><td>Muy bajo: desde USD 0,005/acción en Fixed, mín. USD 1</td><td>0,35% + IVA, mín. USD 2 + IVA</td></tr>
+          <tr><td>API</td><td><strong>TWS API + Web API</strong>, datos/órdenes/portfolio globales</td><td>REST API; docs actuales muestran NYSE y portfolio/operaciones USA</td></tr>
+          <tr><td>Fondeo desde USD en Argentina</td><td>SWIFT directo si el banco lo cursa; IBKR no cobra recepción</td><td>USD local → AL30D → AL30C → IOL USA</td></tr>
+          <tr><td>Retiro</td><td>Muy barato del lado IBKR; fricción principal: banco receptor</td><td>USA → Argentina: 0,1% + IVA, mín. USD 5 + IVA</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="activos">
+    <h2>1. Disponibilidad de activos</h2>
+    <p class="section-lead">
+      La diferencia no es tanto “USA sí / USA no”, sino <strong>broker estadounidense con alcance global</strong> versus
+      <strong>broker argentino con una cuenta adicional para Estados Unidos</strong>.
+    </p>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Interactive Brokers</h3>
+        <ul>
+          <li>Más de 170 mercados en 40 países y 29 monedas.</li>
+          <li>Acciones, ETFs, bonos, opciones, futuros, divisas y fondos.</li>
+          <li>Acceso directo a múltiples mercados europeos y asiáticos.</li>
+          <li>Posibilidad de operar ETFs domiciliados en Europa (por ejemplo UCITS), según mercado y permisos.</li>
+          <li>Una sola cuenta multidivisa para el portfolio internacional.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>InvertirOnline</h3>
+        <ul>
+          <li>Cuenta argentina: acciones locales, CEDEARs, bonos, ONs, opciones, cauciones, etc.</li>
+          <li>Cuenta USA: acciones, ETFs, ADRs y REITs del mercado estadounidense.</li>
+          <li>Muy buena integración Argentina ↔ USA.</li>
+          <li>Para exposición a Europa/Japón puede utilizar ETFs/ADRs listados en USA, pero eso no equivale a acceso directo a las bolsas locales.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="costos">
+    <h2>2. Costos para una cartera de USD 40.000</h2>
+    <p class="section-lead">
+      Ambos tienen mantenimiento sin cargo. La diferencia aparece en cada operación y se vuelve relevante aun para una estrategia de buy-and-hold.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Concepto</th><th>IBKR Pro Fixed</th><th>IOL Cuenta USA</th></tr></thead>
+        <tbody>
+          <tr><td>Apertura</td><td>USD 0</td><td>USD 0</td></tr>
+          <tr><td>Mantenimiento</td><td>USD 0</td><td>USD 0</td></tr>
+          <tr><td>Acciones/ETFs USA</td><td>USD 0,005/acción; mín. USD 1 por orden</td><td>0,35% + IVA; mín. USD 2 + IVA</td></tr>
+          <tr><td>Compra de USD 40.000</td><td>Con 5 órdenes típicas: aproximadamente USD 5–10*</td><td><strong>USD 169,40</strong></td></tr>
+          <tr><td>Venta futura de USD 40.000</td><td>Similar, según cantidad de títulos</td><td><strong>USD 169,40</strong></td></tr>
+          <tr><td>Dividendos</td><td>Sin fee general de broker por cobro**</td><td>1% + IVA del monto cobrado</td></tr>
+          <tr><td>Retiro USA → Argentina</td><td>Dos solicitudes gratis/mes según tarifario vigente; luego USD 10 por wire, más cargos externos</td><td>0,1% + IVA; mín. USD 5 + IVA</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small">* Estimación ilustrativa: en IBKR el costo depende de la cantidad de acciones/participaciones, no solo del valor de la orden. ** Pueden existir ADR fees, retenciones fiscales u otros costos del instrumento.</p>
+
+    <div class="callout">
+      <strong>Lectura práctica:</strong> para USD 40.000, IOL cuesta aproximadamente USD 169,40 solo para entrar en la cartera USA y otros USD 169,40 para salir, antes de considerar fondeo, dividendos o rebalanceos. En IBKR, una cartera de pocos ETFs suele tener un costo de ejecución de un orden de magnitud menor.
+    </div>
+  </section>
+
+  <section id="fondeo">
+    <h2>3. Circuito de fondeo</h2>
+    <p class="section-lead">
+      Como el capital inicial ya está en dólares en Argentina, no es necesario pasar por pesos para usar IOL. Pero sí hay que convertir
+      <strong>USD locales (especie D)</strong> en <strong>USD cable (especie C)</strong>.
+    </p>
+
+    <h3>IOL — desde USD en banco argentino</h3>
+    <div class="route">
+      <div class="node">USD en banco argentino</div><div class="arrow">→</div>
+      <div class="node">USD en cuenta local IOL</div><div class="arrow">→</div>
+      <div class="node">AL30D</div><div class="arrow">→</div>
+      <div class="node">AL30C</div><div class="arrow">→</div>
+      <div class="node">USD en IOL USA</div>
+    </div>
+    <p>
+      IOL lo ofrece como <strong>CCL Simple</strong>: la compra de AL30D y venta de AL30C se ejecuta como un flujo integrado.
+      Por lo tanto, el camino no es USD → ARS → USD, sino USD local → USD cable mediante títulos.
+    </p>
+
+    <h3>Estimación con USD 40.000</h3>
+    <p>
+      El panel de IOL del 25/09/2026 mostraba un dólar MEP AL30D vendedor de <strong>$1.552,685</strong> y un CCL AL30C vendedor de
+      <strong>$1.625,8937</strong>. Como referencia económica, la relación implica:
+    </p>
+    <div class="formula">
+USD cable teórico ≈ USD 40.000 × (1.552,685 / 1.625,8937)
+                  ≈ USD 38.199
+
+Diferencial MEP/CCL ≈ USD 1.801
+                   ≈ 4,50% del capital
+    </div>
+    <p class="small">
+      Esta es una aproximación de la brecha económica, no una cotización ejecutable. La ejecución real depende de las puntas AL30D/AL30C, timing y slippage.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Perfil IOL local</th><th>Tarifa bonos publicada</th><th>USD cable antes de fee</th><th>Estimación después de 2 patas + derechos*</th><th>Costo efectivo aprox.</th></tr></thead>
+        <tbody>
+          <tr><td>Gold</td><td>0,50%</td><td>USD 38.199</td><td><strong>USD 37.800</strong></td><td>≈ 5,50%</td></tr>
+          <tr><td>Platinum</td><td>0,30%</td><td>USD 38.199</td><td><strong>USD 37.957</strong></td><td>≈ 5,11%</td></tr>
+          <tr><td>Black</td><td>0,10%</td><td>USD 38.199</td><td><strong>USD 38.113</strong></td><td>≈ 4,72%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small">
+      * Supuesto conservador de aplicar la tarifa publicada de bonos a cada pata (AL30D y AL30C) más 0,01% de derecho de mercado por pata.
+      No incluye IVA cuando corresponda ni slippage. En CCL Simple IOL puede mostrar un costo final específico en el ticket; conviene validar ese importe antes de confirmar.
+      Las categorías se determinan por volumen del mes anterior, por lo que una cuenta nueva normalmente no obtiene de inmediato la tarifa Black.
+    </p>
+
+    <div class="callout warning">
+      <strong>La conclusión clave:</strong> con una brecha MEP/CCL de ~4,5%, el costo dominante no es la comisión del broker sino convertir
+      dólares locales en dólares cable. Si esa brecha se comprime, el costo de fondeo de IOL baja mucho; si se amplía, sube.
+    </div>
+
+    <h3>IBKR — transferencia bancaria en USD</h3>
+    <div class="route">
+      <div class="node">USD en banco argentino</div><div class="arrow">→</div>
+      <div class="node">Wire / SWIFT en USD</div><div class="arrow">→</div>
+      <div class="node">Cuenta IBKR</div>
+    </div>
+    <p>
+      IBKR acepta bank wires y no cobra fee por recibirlos. El cliente primero crea una notificación de depósito en Client Portal y luego ordena
+      la transferencia desde su banco usando las instrucciones específicas que IBKR genera para esa cuenta y moneda.
+    </p>
+    <p>
+      El BCRA informa actualmente que las personas humanas residentes pueden acceder sin límite al mercado de cambios para formar activos externos mediante débito en cuenta,
+      y los informes cambiarios de 2026 muestran giros de divisas de personas humanas al exterior. En la práctica, que un banco argentino curse un wire directamente a un broker
+      depende de sus procedimientos internos, documentación y concepto de transferencia.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Supuesto de costo bancario total</th><th>Capital que llega a IBKR</th><th>Costo sobre USD 40.000</th></tr></thead>
+        <tbody>
+          <tr><td>USD 50</td><td>USD 39.950</td><td>0,125%</td></tr>
+          <tr><td>USD 100</td><td>USD 39.900</td><td>0,25%</td></tr>
+          <tr><td>USD 200</td><td>USD 39.800</td><td>0,50%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small">
+      Escenarios ilustrativos: el costo real lo determina el banco argentino y los corresponsales. IBKR indica 1–4 días hábiles para wires, con los bancos no estadounidenses normalmente en el extremo más lento.
+    </p>
+
+    <div class="callout">
+      <strong>Para USD 40.000 ya dolarizados:</strong> si tu banco permite un wire directo a IBKR con un costo razonable, el fondeo de IBKR puede ser económicamente muy superior al CCL actual. Si el banco no lo permite y necesitás hacer CCL igualmente para sacar los fondos, gran parte de esa ventaja desaparece.
+    </div>
+  </section>
+
+  <section id="api">
+    <h2>4. API para un cliente customizado</h2>
+    <p class="section-lead">
+      Ambos ofrecen APIs, pero la escala es distinta. IBKR está diseñado como infraestructura de trading global; IOL ofrece una API REST útil y relativamente simple para automatizar su ecosistema.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Capacidad</th><th>IBKR</th><th>IOL</th></tr></thead>
+        <tbody>
+          <tr><td>Órdenes</td><td>Sí, múltiples clases de activo y mercados</td><td>Sí; la documentación actual muestra ejemplos con NYSE</td></tr>
+          <tr><td>Portfolio / operaciones</td><td>Sí, global</td><td>Sí; endpoints documentan Argentina y Estados_Unidos</td></tr>
+          <tr><td>Datos históricos / real-time</td><td>Amplios; algunas suscripciones de market data son pagas</td><td>La página comercial enfatiza datos del mercado argentino; conviene validar cobertura USA símbolo por símbolo</td></tr>
+          <tr><td>Streaming</td><td>Amplio ecosistema TWS/Web API</td><td>REST/token; menor profundidad pública</td></tr>
+          <tr><td>Sandbox / paper</td><td>Paper Trading</td><td>Sandbox documentado</td></tr>
+          <tr><td>Costo API</td><td>Sin fee específico de API; market data puede costar</td><td>Hasta 25.000 API calls/mes bonificadas; luego ARS 500 + IVA, compensable con bonificaciones</td></tr>
+          <tr><td>Mejor fit</td><td><strong>Aplicación financiera internacional propia</strong></td><td>Automatización Argentina + USA dentro de IOL</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="impuestos">
+    <h2>5. Tratamiento impositivo argentino</h2>
+    <p class="section-lead">
+      Para un residente fiscal argentino, el broker utilizado no suele cambiar el tratamiento del mismo activo extranjero directo.
+      Lo que sí cambia la naturaleza fiscal es comprar el activo extranjero directo versus comprar un CEDEAR.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Concepto</th><th>Activo extranjero directo en IBKR</th><th>Activo extranjero directo en IOL USA</th><th>CEDEAR en IOL Argentina</th></tr></thead>
+        <tbody>
+          <tr><td>Ganancia por venta</td><td>Renta de fuente extranjera; reglas argentinas aplicables, usualmente 15% para este tipo de resultado</td><td>Mismo principio</td><td>Puede quedar exenta si se cumplen las condiciones de cotización/oferta pública previstas por la ley</td></tr>
+          <tr><td>Dividendos</td><td>Renta de fuente extranjera; se integra a Ganancias, con crédito por impuesto análogo cuando corresponda</td><td>Mismo principio</td><td>Normalmente renta de fuente extranjera; no hereda la exención de la venta</td></tr>
+          <tr><td>Bienes Personales</td><td>Activo alcanzado al 31/12 según valuación y situación del contribuyente</td><td>Mismo principio</td><td>También puede quedar alcanzado; el tratamiento patrimonial sigue al activo representado</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <strong>Implicación:</strong> no hay una ventaja fiscal por “estar en IOL” versus “estar en IBKR” si en ambos casos comprás la misma acción o ETF extranjero directo.
+      La diferencia fiscal relevante aparece cuando comparás ese activo directo con un CEDEAR negociado localmente.
+    </div>
+
+    <p class="small">
+      Nota: esta sección es un mapa general y no una liquidación impositiva. La normativa argentina cambia con frecuencia y el tratamiento final depende de residencia,
+      instrumento, domicilio del fondo/emisor, pérdidas compensables, patrimonio total y otras rentas.
+    </p>
+  </section>
+
+  <section id="retiros">
+    <h2>6. Rescate de fondos</h2>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>IBKR</h3>
+        <ul>
+          <li>Luego de vender acciones/ETFs USA, la liquidación estándar es T+1.</li>
+          <li>El tarifario vigente muestra dos solicitudes de retiro gratuitas por mes calendario.</li>
+          <li>Después de ese cupo, un wire USD cuesta USD 10 del lado IBKR.</li>
+          <li>El banco receptor/intermediario puede cobrar adicionalmente.</li>
+          <li>La principal fricción para volver a Argentina suele ser documental/bancaria, no el broker.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>IOL USA</h3>
+        <ul>
+          <li>Transferencia de fondos USA → Argentina: 0,1% + IVA.</li>
+          <li>Mínimo publicado: USD 5 + IVA.</li>
+          <li>Sobre USD 40.000: aproximadamente USD 48,40.</li>
+          <li>Transferencia DTC saliente de títulos: USD 30 + IVA.</li>
+          <li>Ventaja: integración administrativa con la cuenta local.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="decision">
+    <h2>7. Lectura final para USD 40.000</h2>
+    <div class="decision">
+      <div class="card dark">
+        <p class="bigline">IBKR como broker internacional principal</p>
+        <p class="sub">
+          Encaja mejor si el objetivo real es USA + Europa + Japón, ETFs UCITS, bajas comisiones y una API que pueda ser la base de un cliente customizado.
+        </p>
+      </div>
+      <div class="card">
+        <p class="bigline">IOL como capa argentina / CEDEAR / CCL</p>
+        <p class="sub">
+          Es especialmente útil para activos argentinos, CEDEARs y para resolver el puente Argentina–USA. Con la brecha MEP/CCL actual, fondear IOL USA desde USD locales es costoso.
+        </p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>La variable que decidiría primero:</strong> preguntaría a tu banco argentino cuánto cuesta y qué documentación exige para enviar
+      <strong>USD 40.000 por SWIFT directamente a las instrucciones de depósito de IBKR</strong>. Si ese wire puede hacerse por, por ejemplo, USD 50–200,
+      la diferencia frente al ~4,5% de brecha MEP/CCL observada es muy grande.
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Si tu prioridad es…</th><th>Lectura</th></tr></thead>
+        <tbody>
+          <tr><td>Costos de trading bajos</td><td><strong>IBKR</strong></td></tr>
+          <tr><td>Europa/Japón directos</td><td><strong>IBKR</strong></td></tr>
+          <tr><td>API para producto propio</td><td><strong>IBKR</strong>, aunque IOL es más capaz de lo que parece y soporta USA en endpoints documentados</td></tr>
+          <tr><td>CEDEARs / bonos argentinos</td><td><strong>IOL</strong></td></tr>
+          <tr><td>Todo integrado en Argentina</td><td><strong>IOL</strong></td></tr>
+          <tr><td>Fondear USD locales con la brecha actual</td><td><strong>IBKR puede ser mucho más barato si el wire directo es viable</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="fuentes">
+    <h2>Fuentes principales</h2>
+    <p class="section-lead">Se priorizaron páginas oficiales de IOL, IBKR, BCRA, ARCA y normativa nacional.</p>
+    <ol class="sources footnotes">
+      <li><a href="https://www.invertironline.com/tarifas-estados-unidos">IOL — Tarifas Estados Unidos</a>: 0,35% + IVA, retiros, dividendos y DTC.</li>
+      <li><a href="https://www.invertironline.com/tarifas">IOL — Tarifas Argentina</a>: perfiles Gold/Platinum/Black, bonos, derechos de mercado y API.</li>
+      <li><a href="https://www.invertironline.com/productos/dolar-ccl-simple">IOL — Dólar CCL Simple</a>: flujo AL30/AL30D → AL30C.</li>
+      <li><a href="https://iol.invertironline.com/mercado/cotizaciones/argentina/monedas">IOL — Cotización de monedas</a>: referencia MEP/CCL usada para la estimación del 25/09/2026.</li>
+      <li><a href="https://www.invertironline.com/api">IOL — API</a> y <a href="https://developers.invertironline.com/">documentación de desarrolladores</a>.</li>
+      <li><a href="https://www.interactivebrokers.com/en/pricing/commissions-stocks.php">IBKR — Comisiones de acciones y ETFs</a>.</li>
+      <li><a href="https://www.interactivebrokers.com/en/pricing/other-fees.php">IBKR — Other Fees</a>: retiros.</li>
+      <li><a href="https://portal.interactivebrokers.com/en/support/fund-my-account.php">IBKR — Fund Your Account</a>: wires y política de depósitos.</li>
+      <li><a href="https://www.interactivebrokers.com/en/trading/international-lp.php">IBKR — International Trading</a>: mercados, países y monedas.</li>
+      <li><a href="https://www.interactivebrokers.com/en/trading/ib-api.php">IBKR — Trading API Solutions</a>.</li>
+      <li><a href="https://gdcdyn.interactivebrokers.com/en/accounts/open-account-country-list.php">IBKR — Países disponibles</a>: Argentina incluida.</li>
+      <li><a href="https://www.bcra.gob.ar/normativa-de-exterior-y-cambios/">BCRA — Normativa de Exterior y Cambios</a>.</li>
+      <li><a href="https://arca.gob.ar/gananciasYBienes/bienes-personales/conceptos-basicos/bienes-alcanzados.asp">ARCA — Bienes alcanzados por Bienes Personales</a>.</li>
+      <li><a href="https://www.argentina.gob.ar/normativa/nacional/decreto-824-2019-332890/actualizacion">Ley de Impuesto a las Ganancias — texto actualizado</a>.</li>
+    </ol>
+  </section>
+
+  <div class="footer">
+    Documento informativo preparado el 28/09/2026. Los costos de mercado, spreads, reglas cambiarias e impuestos pueden cambiar.
+    Antes de transferir USD 40.000, confirmar el costo final del wire con el banco y revisar el ticket de CCL Simple de IOL.
+  </div>
+</div>
+</body>
+</html>
